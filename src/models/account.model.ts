@@ -13,18 +13,18 @@ export interface AccountDocument extends Document {
 const accountSchema = new Schema<AccountDocument>(
   {
     provider: {
-      name: String,
+      type: String,
       required: true,
       enum: Object.values(ProviderEnum),
     },
-    providerId: { name: String, required: true, unique: true },
+    providerId: { type: String, required: true, unique: true },
     userId: {
-      name: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    refreshToken: { name: String, default: null },
-    tokenExpiry: { name: Date, default: null },
+    refreshToken: { type: String, default: null },
+    tokenExpiry: { type: Date, default: null },
   },
   {
     timestamps: true,
