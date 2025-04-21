@@ -4,7 +4,11 @@ import AccountModel from "../models/account.model";
 import WorkspaceModel from "../models/workspace.model";
 import RoleModel from "../models/roles-permission.model";
 import { Roles } from "../enums/role.enum";
-import { BadRequestException, NotFoundException } from "../utils/AppError";
+import {
+  BadRequestException,
+  NotFoundException,
+  UnAuthorizedException,
+} from "../utils/AppError";
 import MemberModel from "../models/member.model";
 import { ProviderEnum } from "../enums/account-provider.enum";
 
@@ -148,4 +152,31 @@ export const registerUserService = async (data: {
   } finally {
     session.endSession();
   }
+};
+
+export const verifyUserService = async ({
+  email,
+  password,
+  provider = ProviderEnum.EMAIL,
+}: {
+  email: string;
+  password: string;
+  provider?: string;
+}) => {
+  const account = await AccountModel.findOne({ provider, providerId: email });
+
+  if (!account) {
+    throw new NotFoundException("Invalid email or Password");
+  }
+  const user = await UserModel.findById(account.userId);
+  if (!user) {
+    throw new NotFoundException("User not found for thr given email");
+  }
+  const isMatch = await user.comparePassword(password);
+
+  if (!isMatch) {
+    throw new UnAuthorizedException("Invalid Email or Password");
+  }
+
+  return user.omitPassword();
 };
