@@ -66,3 +66,19 @@ export const loginController = asyncHandler(
     )(req, res, next);
   }
 );
+export const logoutController = asyncHandler(
+  async (req: Request, res: Response) => {
+    req.logout((err) => {
+      if (err) {
+        console.log("logout error:", err);
+        return res.status(HTTPSTATUS.INTERNAL_SERVER_ERROR).json({
+          message: " Failed to Log out",
+        });
+      }
+    });
+    req.session = null;
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Successfully logged out",
+    });
+  }
+);
