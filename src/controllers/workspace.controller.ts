@@ -3,6 +3,7 @@ import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import {
   changeRoleSchema,
   createWorkspaceSchema,
+  updateWorkspaceSchema,
   workspaceIdSchema,
 } from "../validation/workspace.validation";
 import { HTTPSTATUS } from "../config/http.config";
@@ -13,6 +14,7 @@ import {
   getWorkspaceAnalyticsService,
   getWorkspaceByIdService,
   getWorkspaceMembersService,
+  updateWorkspaceByIdService,
 } from "../services/workspace.service";
 import { getMemberRoleInWorkspace } from "../services/member.service";
 import { Permissions } from "../enums/role.enum";
@@ -27,6 +29,27 @@ export const createWorkSpaceController = asyncHandler(
 
     res.status(HTTPSTATUS.CREATED).json({
       message: "Work space created successfully",
+      workspace,
+    });
+  }
+);
+export const updateWorkspaceByIdController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { name, description } = updateWorkspaceSchema.parse(req.body);
+    const userId = req.user?._id;
+    const workspaceId = workspaceIdSchema.parse(req.params.id);
+
+    const { role } = await getMemberRoleInWorkspace(userId, workspaceId);
+    roleGuard(role, [Permissions.EDIT_WORKSPACE]);
+
+    const { workspace } = await updateWorkspaceByIdService(
+      workspaceId,
+      name,
+      description
+    );
+
+    res.status(HTTPSTATUS.CREATED).json({
+      message: "Work space updated successfully",
       workspace,
     });
   }

@@ -22,7 +22,7 @@ export const createWorkspaceSchema = z.object({
   description: descriptionSchema,
 });
 
-export const updateWorkSpaceSchema = z.object({
+export const updateWorkspaceSchema = z.object({
   name: nameSchema,
   description: descriptionSchema,
 });

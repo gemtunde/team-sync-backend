@@ -6,11 +6,13 @@ import {
   getWorkspaceAnalyticsController,
   getWorkspaceByIdController,
   getWorkspaceMembersController,
+  updateWorkspaceByIdController,
 } from "../controllers/workspace.controller";
 
 const workspaceRoutes = Router();
 
 workspaceRoutes.post("/create/new", createWorkSpaceController);
+workspaceRoutes.put("/update/:id", updateWorkspaceByIdController);
 workspaceRoutes.put(
   "/change/member/role/:id",
   changeWorkspaceMemberRoleController
