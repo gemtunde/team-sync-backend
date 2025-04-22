@@ -12,6 +12,7 @@ import { Roles } from "../enums/role.enum";
 import { ErrorCodeEnumType } from "../enums/error-code.enum";
 import TaskModel from "../models/task.model";
 import { TaskStatusEnum } from "../enums/task.enum";
+import ProjectModel from "../models/project.model";
 
 export const createWorkspaceService = async (
   userId: string,
@@ -177,4 +178,60 @@ export const changeWorkspaceMemberRoleService = async (
   return {
     member,
   };
+};
+export const deleteWorkspaceByIdService = async (
+  workspaceId: string,
+  userId: string
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const workspace = await WorkspaceModel.findById(workspaceId);
+    if (!workspace) {
+      throw new NotFoundException("Work space not found");
+    }
+    //check if the owner owns the work space
+    if (workspace.owner.toString() !== userId) {
+      throw new UnAuthorizedException(
+        "You are not authorized to delete this workspace"
+      );
+    }
+    const user = await UserModel.findById(userId).session(session);
+    if (!user) {
+      throw new UnAuthorizedException("User not found");
+    }
+
+    await ProjectModel.deleteMany({ workspace: workspace?._id }).session(
+      session
+    );
+    await TaskModel.deleteMany({ workspace: workspace?._id }).session(session);
+    await MemberModel.deleteMany({ workspaceId: workspace?._id }).session(
+      session
+    );
+
+    //update user's current workspace, if it matches then delete
+
+    if (user?.currentWorkspace?.equals(workspaceId)) {
+      const memberWorkspace = await MemberModel.findOne({ userId }).session(
+        session
+      );
+
+      //update user's curent workspace
+      user.currentWorkspace = memberWorkspace
+        ? memberWorkspace.workspaceId
+        : null;
+      await user.save({ session });
+    }
+    await workspace.deleteOne({ session });
+    await session.commitTransaction();
+    session.endSession();
+
+    return {
+      currentWorkspace: user.currentWorkspace,
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 };
