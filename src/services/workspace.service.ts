@@ -3,8 +3,13 @@ import MemberModel from "../models/member.model";
 import RoleModel from "../models/roles-permission.model";
 import UserModel from "../models/user.model";
 import WorkspaceModel from "../models/workspace.model";
-import { NotFoundException } from "../utils/AppError";
+import {
+  BadRequestException,
+  NotFoundException,
+  UnAuthorizedException,
+} from "../utils/AppError";
 import { Roles } from "../enums/role.enum";
+import { ErrorCodeEnumType } from "../enums/error-code.enum";
 
 export const createWorkspaceService = async (
   userId: string,
@@ -56,5 +61,46 @@ export const getAllWorkspacesUserIsMemberService = async (userId: string) => {
   const workspaceUser = members.map((member) => member.workspaceId);
   return {
     workspaceUser,
+  };
+};
+
+//get All Work spaces User Is Member Service
+export const getWorkspaceByIdService = async (workspaceId: string) => {
+  const workspace = await WorkspaceModel.findById(workspaceId);
+
+  if (!workspace) {
+    throw new NotFoundException("Work space not found");
+  }
+  const members = await MemberModel.find({
+    workspaceId,
+  }).populate("role");
+
+  if (!members) {
+    throw new UnAuthorizedException(
+      "You are not a member of the workspace",
+      ErrorCodeEnumType.ACCESS_UNAUTHORIZED
+    );
+  }
+  const workspaceWithMembers = {
+    ...workspace.toObject(),
+    members,
+  };
+  return {
+    workspace: workspaceWithMembers,
+  };
+};
+
+export const getWorkspaceMembersService = async (workspaceId: string) => {
+  const members = await MemberModel.find({ workspaceId })
+    .populate("userId", "name email profilePicture -password")
+    .populate("role", "name");
+
+  const roles = await RoleModel.find({}, { name: 1, _id: 1 })
+    .select("-permission")
+    .lean();
+
+  return {
+    members,
+    roles,
   };
 };
