@@ -1,4 +1,8 @@
+import mongoose from "mongoose";
 import ProjectModel from "../models/project.model";
+import TaskModel from "../models/task.model";
+import { NotFoundException } from "../utils/AppError";
+import { TaskStatusEnum } from "../enums/task.enum";
 
 export const createProjectService = async (
   userId: string,
@@ -51,4 +55,103 @@ export const getAllProjectInWorkspaceService = async (
     totalPages,
     skip,
   };
+};
+
+export const getProjectByIdAndWorkspaceIdControllerService = async (
+  workspaceId: string,
+  projectId: string
+) => {
+  const project = await ProjectModel.findOne({
+    _id: projectId,
+    workspace: workspaceId,
+  });
+  if (!project) {
+    throw new NotFoundException(
+      "project not found or does not belong to this workspace "
+    );
+  }
+  return {
+    project,
+  };
+};
+export const getProjectAnalyticsService = async (
+  workspaceId: string,
+  projectId: string
+) => {
+  const project = await ProjectModel.findOne({
+    _id: projectId,
+    workspace: workspaceId,
+  });
+  if (!project || project.workspace.toString() !== workspaceId) {
+    throw new NotFoundException(
+      "project not found or does not belong to this workspace "
+    );
+  }
+
+  const currentDate = new Date();
+
+  //using mongoose AGGREGATE To query the db
+  const taskAnalytics = await TaskModel.aggregate([
+    {
+      $match: {
+        project: new mongoose.Types.ObjectId(projectId),
+      },
+    },
+    {
+      $facet: {
+        totalTasks: [{ $count: "count" }],
+        overdueTasks: [
+          {
+            $match: {
+              dueDate: { $lt: currentDate },
+              status: {
+                $ne: TaskStatusEnum.DONE,
+              },
+            },
+          },
+          {
+            $count: "count",
+          },
+        ],
+        completedTasks: [
+          {
+            $match: { status: TaskStatusEnum.DONE },
+          },
+          { $count: "count" },
+        ],
+      },
+    },
+  ]);
+  const _analytics = taskAnalytics[0];
+
+  const analytics = {
+    totalTasks: _analytics.totalTasks[0]?.count || 0,
+    overdueTasks: _analytics.overdueTasks[0]?.count || 0,
+    completedTasks: _analytics.completedTasks[0]?.count || 0,
+  };
+  return {
+    analytics,
+  };
+
+  //here is another methods
+  //   const totalTasks = await TaskModel.countDocuments({
+  //     workspace: workspaceId,
+  //   });
+  //   const overdueTasks = await TaskModel.countDocuments({
+  //     workspace: workspaceId,
+  //     dueDate: { $lt: currentDate },
+  //     status: { $ne: TaskStatusEnum.DONE },
+  //   });
+  //   const completedTasks = await TaskModel.countDocuments({
+  //     workspace: workspaceId,
+  //     status: TaskStatusEnum.DONE,
+  //   });
+  //   const analytics = {
+  //     totalTasks,
+  //     overdueTasks,
+  //     completedTasks,
+  //   };
+  //   return {
+  //     project,
+  //   };
 };
