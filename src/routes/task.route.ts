@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createTaskController,
+  deleteTaskController,
   getAllTasksController,
   getTaskByIdController,
   updateTaskController,
@@ -22,5 +23,9 @@ taskRoutes.get(
 );
 
 taskRoutes.get("/workspace/:workspaceId/all", getAllTasksController);
+taskRoutes.delete(
+  "/:taskId/workspace/:workspaceId/delete",
+  deleteTaskController
+);
 
 export default taskRoutes;
