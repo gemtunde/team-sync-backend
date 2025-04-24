@@ -132,7 +132,7 @@ export const deleteProjectController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user?._id;
 
-    const projectId = projectIdSchema.parse(req.params.id);
+    const projectId = projectIdSchema.parse(req.params.projectId);
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);
 
     const { role } = await getMemberRoleInWorkspace(userId, workspaceId);
