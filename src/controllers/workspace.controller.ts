@@ -79,10 +79,10 @@ export const deleteWorkspaceByIdController = asyncHandler(
 export const getAllWorkspacesUserIsMemberController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const { workspaceUser } = await getAllWorkspacesUserIsMemberService(userId);
+    const { workspaces } = await getAllWorkspacesUserIsMemberService(userId);
     res.status(HTTPSTATUS.OK).json({
       message: "Work spaces fetched successfully",
-      workspaceUser,
+      workspaces,
     });
   }
 );

@@ -79,9 +79,9 @@ export const getAllWorkspacesUserIsMemberService = async (userId: string) => {
     .populate("workspaceId")
     .select("-password")
     .exec();
-  const workspaceUser = members.map((member) => member.workspaceId);
+  const workspaces = members.map((member) => member.workspaceId);
   return {
-    workspaceUser,
+    workspaces,
   };
 };
 
