@@ -54,7 +54,7 @@ export const joinWorkspaceByInviteService = async (
     userId,
     workspaceId: workspace._id,
   }).exec();
-  if (!existingMember) {
+  if (existingMember) {
     throw new BadRequestException(
       "You are already a member of this work space"
     );
