@@ -17,7 +17,7 @@ export interface TaskDocument extends Document {
   priority: TaskPriorityEnumType;
   assignedTo: mongoose.Types.ObjectId | null;
   createdBy: mongoose.Types.ObjectId;
-  dueDate: Date;
+  dueDate: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
