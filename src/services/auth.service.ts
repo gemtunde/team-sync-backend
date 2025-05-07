@@ -180,3 +180,13 @@ export const verifyUserService = async ({
 
   return user.omitPassword();
 };
+
+export const findUserByIdService = async (userId: string) => {
+  const user = await UserModel.findById(userId, {
+    password: false,
+  });
+  if (!user) {
+    throw new NotFoundException("User not found");
+  }
+  return user || null;
+};
